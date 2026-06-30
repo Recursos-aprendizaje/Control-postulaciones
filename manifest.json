@@ -1,6 +1,6 @@
 {
-  "name": "Bitácora de búsqueda - Control de postulaciones",
-  "short_name": "Bitácora empleo",
+  "name": "Control de Postulaciones",
+  "short_name": "Control Postulac.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -12,3 +12,4 @@
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
+

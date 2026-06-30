@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#6C5CE7">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Bitácora de Búsqueda</title>
+<title>Control de Postulaciones</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -531,7 +531,7 @@
 
   function renderStats(){
     var total = apps.length;
-    var activas = apps.filter(function(a){ return CLOSED.indexOf(a.estatus)===-1 && a.estatus!=='rechazado'; }).length;
+    var activas = apps.filter(function(a){ return ['rechazado','oferta','sin_respuesta'].indexOf(a.estatus)===-1; }).length;
     var pendientes = apps.filter(isDue).length;
     var row = document.getElementById('statsRow');
     row.innerHTML =
