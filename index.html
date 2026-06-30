@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6C5CE7">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Bitácora de Búsqueda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F8F6F9;
+    --ink:#2B2438;
+    --ink-soft:#7A7289;
+    --accent:#FF6F61;
+    --accent-soft:#FFE3DF;
+    --teal:#2B2438;
+    --teal-soft:#ECE9F7;
+    --violet:#6C5CE7;
+    --violet-soft:#ECE9FB;
+    --line:#E9E5EE;
+    --card:#FFFFFF;
+    --gray-dot:#A9A4BD;
+    --amber-dot:#FFB648;
+    --blue-dot:#4DC8E0;
+    --teal-dot:#6C5CE7;
+    --green-dot:#2ED9A3;
+    --red-dot:#F0506E;
+    --dark-dot:#8B86A0;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .phone{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+    padding-bottom:calc(100px + env(safe-area-inset-bottom));
+  }
+  /* ---------- HEADER ---------- */
+  .panel{
+    background:var(--teal);
+    color:#fff;
+    padding:calc(20px + env(safe-area-inset-top)) 20px 20px;
+    border-radius:0 0 26px 26px;
+  }
+  .panel-eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#FF9A8E;
+    margin:0 0 4px;
+  }
+  .panel-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  .panel-underline{
+    width:34px;height:3px;
+    background:var(--accent);
+    border-radius:3px;
+    margin:0 0 16px;
+  }
+  .panel-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .stat-box{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:12px;
+    padding:11px 9px;
+    text-align:left;
+  }
+  .stat-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    font-weight:600;
+    line-height:1;
+  }
+  .stat-label{
+    font-size:11px;
+    opacity:.8;
+    margin-top:4px;
+    line-height:1.25;
+  }
+  .stat-box.alert{
+    background:rgba(255,111,97,.25);
+    border-color:rgba(255,111,97,.55);
+  }
+  /* ---------- FILTERS ---------- */
+  .filters{
+    padding:16px 20px 8px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:5;
+  }
+  .search-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .search-input{
+    flex:1;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:14.5px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:44px;
+  }
+  .search-input:focus{outline:none;border-color:var(--violet);}
+  select.status-select{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    padding:11px 10px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    max-width:128px;
+    min-height:44px;
+  }
+  .pill-row{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  .pill-row::-webkit-scrollbar{display:none;}
+  .pill{
+    flex:0 0 auto;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+    min-height:36px;
+    display:flex;
+    align-items:center;
+    transition:transform .12s;
+  }
+  .pill:active{transform:scale(.96);}
+  .pill.active{
+    background:var(--violet);
+    color:#fff;
+    border-color:var(--violet);
+  }
+  /* ---------- LIST ---------- */
+  .list{
+    padding:6px 20px 0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:13px 14px;
+    cursor:pointer;
+  }
+  .card.due{
+    border-left:3px solid var(--accent);
+    border-radius:0 var(--radius) var(--radius) 0;
+  }
+  .card-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:6px;
+  }
+  .status-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:500;
+    color:var(--ink-soft);
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    flex:0 0 auto;
+  }
+  .platform-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--violet);
+    background:var(--violet-soft);
+    border:1px solid var(--violet-soft);
+    padding:3px 8px;
+    border-radius:7px;
+  }
+  .card-puesto{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:15.5px;
+    margin:0 0 2px;
+    line-height:1.25;
+  }
+  .card-empresa{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 8px;
+  }
+  .card-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .card-date{
+    font-family:'JetBrains Mono',monospace;
+  }
+  .followup-flag{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-weight:600;
+    color:var(--accent);
+  }
+  .empty-state{
+    text-align:center;
+    padding:60px 30px 30px;
+    color:var(--ink-soft);
+  }
+  .empty-state .ti{font-size:34px;color:var(--line);margin-bottom:10px;display:block;}
+  .empty-state h3{
+    font-family:'Space Grotesk',sans-serif;
+    color:var(--ink);
+    margin:0 0 6px;
+    font-size:16px;
+  }
+  .empty-state p{font-size:13.5px;margin:0;line-height:1.5;}
+  /* ---------- FAB ---------- */
+  .fab{
+    position:fixed;
+    bottom:calc(22px + env(safe-area-inset-bottom));
+    right:20px;
+    width:58px;height:58px;
+    border-radius:20px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    font-size:28px;
+    line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 18px rgba(255,111,97,.38);
+    cursor:pointer;
+    z-index:20;
+    transition:transform .12s;
+  }
+  .fab:active{transform:scale(.93);}
+  /* ---------- SHEET / FORM ---------- */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(21,32,30,.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--bg);
+    width:100%;
+    max-width:460px;
+    max-height:88vh;
+    overflow-y:auto;
+    border-radius:24px 24px 0 0;
+    padding:18px 20px calc(28px + env(safe-area-inset-bottom));
+    animation:slideUp .22s ease-out;
+  }
+  @keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-handle{
+    width:36px;height:4px;background:var(--line);
+    border-radius:4px;margin:0 auto 14px;
+  }
+  .sheet-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:18px;
+    margin:0 0 16px;
+  }
+  .field{margin-bottom:13px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:44px;
+  }
+  .field textarea{resize:vertical;min-height:64px;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--violet);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .btn{
+    flex:1;
+    border:none;
+    border-radius:12px;
+    padding:13px;
+    font-size:15px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    min-height:46px;
+    transition:transform .12s;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--violet);color:#fff;}
+  .btn-secondary{background:transparent;border:1px solid var(--line);color:var(--ink-soft);}
+  .btn-danger-text{
+    background:none;border:none;color:var(--red-dot);
+    font-size:13px;font-weight:600;padding:10px 0;
+    width:100%;text-align:center;cursor:pointer;margin-top:4px;
+  }
+  .link-row{
+    display:flex;align-items:center;gap:6px;
+    font-size:12.5px;color:var(--teal);
+    margin-top:6px;word-break:break-all;
+  }
+  .confirm-box{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:18px;text-align:center;max-width:300px;margin:auto;
+  }
+  .confirm-box p{font-size:14px;color:var(--ink-soft);margin:0 0 16px;}
+  .toast{
+    position:fixed;
+    bottom:calc(96px + env(safe-area-inset-bottom));
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:30px;
+    font-size:13px;
+    font-weight:500;
+    z-index:60;
+    opacity:0;
+    transition:opacity .25s;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <div class="panel">
+    <p class="panel-eyebrow">Bitácora de búsqueda</p>
+    <h1 class="panel-title">Control de postulaciones</h1>
+    <div class="panel-underline"></div>
+    <div class="panel-stats" id="statsRow"></div>
+  </div>
+
+  <div class="filters">
+    <div class="search-row">
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar empresa o puesto">
+      <select id="statusFilter" class="status-select">
+        <option value="">Estatus</option>
+      </select>
+    </div>
+    <div class="pill-row" id="platformPills"></div>
+  </div>
+
+  <div class="list" id="list"></div>
+
+</div>
+
+<button class="fab" id="fabAdd" aria-label="Agregar postulación">+</button>
+
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  var STATUS = [
+    {id:'postulado', label:'Postulado', dot:'var(--gray-dot)'},
+    {id:'revision', label:'En revisión', dot:'var(--amber-dot)'},
+    {id:'entrevista_agendada', label:'Entrevista agendada', dot:'var(--blue-dot)'},
+    {id:'entrevista_realizada', label:'Entrevista realizada', dot:'var(--teal-dot)'},
+    {id:'oferta', label:'Oferta recibida', dot:'var(--green-dot)'},
+    {id:'rechazado', label:'Rechazado', dot:'var(--red-dot)'},
+    {id:'sin_respuesta', label:'Sin respuesta', dot:'var(--dark-dot)'}
+  ];
+  var PLATFORMS = ['OCC','Computrabajo','Indeed','LinkedIn','Bolsa de trabajo','Otro'];
+  var CLOSED = ['rechazado','oferta'];
+
+  var statusMap = {};
+  STATUS.forEach(function(s){ statusMap[s.id] = s; });
+
+  var apps = [];
+  var filterPlatform = '';
+  var filterStatus = '';
+  var searchTerm = '';
+  var editingId = null;
+  var pendingDeleteId = null;
+
+  var STORAGE_KEY = 'job-applications';
+
+  function todayStr(){
+    var d = new Date();
+    return d.toISOString().slice(0,10);
+  }
+
+  function fmtDate(s){
+    if(!s) return '—';
+    var p = s.split('-');
+    if(p.length!==3) return s;
+    var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return parseInt(p[2],10) + ' ' + meses[parseInt(p[1],10)-1];
+  }
+
+  function isDue(app){
+    if(!app.proximoSeguimiento) return false;
+    if(CLOSED.indexOf(app.estatus) !== -1) return false;
+    return app.proximoSeguimiento <= todayStr();
+  }
+
+  function uid(){
+    return 'a_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 1700);
+  }
+
+  async function loadApps(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      apps = raw ? JSON.parse(raw) : [];
+    }catch(e){
+      apps = [];
+    }
+  }
+
+  async function saveApps(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+    }catch(e){
+      showToast('No se pudo guardar. Revisa el espacio o permisos del navegador.');
+    }
+  }
+
+  function buildStatusSelectOptions(selectEl, includeAll){
+    selectEl.innerHTML = '';
+    if(includeAll){
+      var optAll = document.createElement('option');
+      optAll.value = '';
+      optAll.textContent = 'Estatus';
+      selectEl.appendChild(optAll);
+    }
+    STATUS.forEach(function(s){
+      var o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.label;
+      selectEl.appendChild(o);
+    });
+  }
+
+  function renderPills(){
+    var row = document.getElementById('platformPills');
+    row.innerHTML = '';
+    var all = document.createElement('button');
+    all.className = 'pill' + (filterPlatform==='' ? ' active' : '');
+    all.textContent = 'Todas';
+    all.onclick = function(){ filterPlatform=''; renderPills(); renderList(); };
+    row.appendChild(all);
+    PLATFORMS.forEach(function(p){
+      var b = document.createElement('button');
+      b.className = 'pill' + (filterPlatform===p ? ' active' : '');
+      b.textContent = p;
+      b.onclick = function(){ filterPlatform = (filterPlatform===p ? '' : p); renderPills(); renderList(); };
+      row.appendChild(b);
+    });
+  }
+
+  function renderStats(){
+    var total = apps.length;
+    var activas = apps.filter(function(a){ return CLOSED.indexOf(a.estatus)===-1 && a.estatus!=='rechazado'; }).length;
+    var pendientes = apps.filter(isDue).length;
+    var row = document.getElementById('statsRow');
+    row.innerHTML =
+      '<div class="stat-box"><div class="stat-num">'+total+'</div><div class="stat-label">Postulaciones</div></div>' +
+      '<div class="stat-box"><div class="stat-num">'+activas+'</div><div class="stat-label">En proceso</div></div>' +
+      '<div class="stat-box'+(pendientes>0?' alert':'')+'"><div class="stat-num">'+pendientes+'</div><div class="stat-label">Seguim. pendiente</div></div>';
+  }
+
+  function renderList(){
+    var list = document.getElementById('list');
+    list.innerHTML = '';
+
+    var filtered = apps.filter(function(a){
+      if(filterPlatform && a.plataforma !== filterPlatform) return false;
+      if(filterStatus && a.estatus !== filterStatus) return false;
+      if(searchTerm){
+        var t = (a.empresa + ' ' + a.puesto).toLowerCase();
+        if(t.indexOf(searchTerm.toLowerCase()) === -1) return false;
+      }
+      return true;
+    });
+
+    filtered.sort(function(x,y){
+      var dueX = isDue(x) ? 0 : 1;
+      var dueY = isDue(y) ? 0 : 1;
+      if(dueX !== dueY) return dueX - dueY;
+      return (y.fechaPostulacion||'').localeCompare(x.fechaPostulacion||'');
+    });
+
+    if(filtered.length === 0){
+      var emptyHtml;
+      if(apps.length === 0){
+        emptyHtml = '<h3>Aún no hay postulaciones</h3><p>Toca el botón + para registrar tu primera postulación en OCC, Computrabajo, Indeed o cualquier otra plataforma.</p>';
+      } else {
+        emptyHtml = '<h3>Sin resultados</h3><p>Ajusta los filtros o la búsqueda para ver tus postulaciones.</p>';
+      }
+      var div = document.createElement('div');
+      div.className = 'empty-state';
+      div.innerHTML = emptyHtml;
+      list.appendChild(div);
+      return;
+    }
+
+    filtered.forEach(function(a){
+      var st = statusMap[a.estatus] || STATUS[0];
+      var due = isDue(a);
+      var card = document.createElement('div');
+      card.className = 'card' + (due ? ' due' : '');
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<span class="status-chip"><span class="dot" style="background:'+st.dot+'"></span>'+st.label+'</span>' +
+          '<span class="platform-tag">'+escapeHtml(a.plataforma||'—')+'</span>' +
+        '</div>' +
+        '<p class="card-puesto">'+escapeHtml(a.puesto||'Sin puesto')+'</p>' +
+        '<p class="card-empresa">'+escapeHtml(a.empresa||'Sin empresa')+'</p>' +
+        '<div class="card-bottom">' +
+          '<span class="card-date">Postulado: '+fmtDate(a.fechaPostulacion)+'</span>' +
+          (a.proximoSeguimiento ?
+            '<span class="'+(due?'followup-flag':'card-date')+'">'+(due?'Seguimiento vencido: ':'Seguimiento: ')+fmtDate(a.proximoSeguimiento)+'</span>'
+            : '') +
+        '</div>';
+      card.onclick = function(){ openForm(a.id); };
+      list.appendChild(card);
+    });
+  }
+
+  function escapeHtml(s){
+    if(!s) return '';
+    return s.replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function openForm(id){
+    editingId = id || null;
+    var app = editingId ? apps.find(function(a){ return a.id===editingId; }) : null;
+
+    var sheet = document.getElementById('sheet');
+    sheet.innerHTML =
+      '<div class="sheet-handle"></div>' +
+      '<p class="sheet-title">'+(app ? 'Editar postulación' : 'Nueva postulación')+'</p>' +
+      '<div class="field"><label>Puesto</label><input id="f_puesto" type="text" placeholder="Ej. Analista de seguridad e higiene"></div>' +
+      '<div class="field"><label>Empresa</label><input id="f_empresa" type="text" placeholder="Ej. Grupo Industrial XYZ"></div>' +
+      '<div class="field-row">' +
+        '<div class="field"><label>Plataforma</label><select id="f_plataforma"></select></div>' +
+        '<div class="field"><label>Estatus</label><select id="f_estatus"></select></div>' +
+      '</div>' +
+      '<div class="field-row">' +
+        '<div class="field"><label>Fecha de postulación</label><input id="f_fecha" type="date"></div>' +
+        '<div class="field"><label>Próximo seguimiento</label><input id="f_seguimiento" type="date"></div>' +
+      '</div>' +
+      '<div class="field"><label>Salario / contacto</label><input id="f_salario" type="text" placeholder="Ej. $18,000 mensual / Lic. Pérez RH"></div>' +
+      '<div class="field"><label>Link de la oferta</label><input id="f_link" type="text" placeholder="https://..."></div>' +
+      '<div class="field"><label>Notas</label><textarea id="f_notas" placeholder="Detalles de la entrevista, requisitos, observaciones..."></textarea></div>' +
+      '<div class="sheet-actions">' +
+        '<button class="btn btn-secondary" id="btnCancel">Cancelar</button>' +
+        '<button class="btn btn-primary" id="btnSave">Guardar</button>' +
+      '</div>' +
+      (app ? '<button class="btn-danger-text" id="btnDelete">Eliminar postulación</button>' : '');
+
+    var platSel = document.getElementById('f_plataforma');
+    PLATFORMS.forEach(function(p){
+      var o = document.createElement('option');
+      o.value = p; o.textContent = p;
+      platSel.appendChild(o);
+    });
+    buildStatusSelectOptions(document.getElementById('f_estatus'), false);
+
+    if(app){
+      document.getElementById('f_puesto').value = app.puesto || '';
+      document.getElementById('f_empresa').value = app.empresa || '';
+      document.getElementById('f_plataforma').value = app.plataforma || PLATFORMS[0];
+      document.getElementById('f_estatus').value = app.estatus || STATUS[0].id;
+      document.getElementById('f_fecha').value = app.fechaPostulacion || '';
+      document.getElementById('f_seguimiento').value = app.proximoSeguimiento || '';
+      document.getElementById('f_salario').value = app.salario || '';
+      document.getElementById('f_link').value = app.link || '';
+      document.getElementById('f_notas').value = app.notas || '';
+    } else {
+      document.getElementById('f_fecha').value = todayStr();
+    }
+
+    document.getElementById('btnCancel').onclick = closeSheet;
+    document.getElementById('btnSave').onclick = saveForm;
+    var delBtn = document.getElementById('btnDelete');
+    if(delBtn){ delBtn.onclick = function(){ confirmDelete(editingId); }; }
+
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeSheet(){
+    document.getElementById('overlay').classList.remove('open');
+    editingId = null;
+  }
+
+  async function saveForm(){
+    var puesto = document.getElementById('f_puesto').value.trim();
+    var empresa = document.getElementById('f_empresa').value.trim();
+    if(!puesto || !empresa){
+      showToast('Falta el puesto o la empresa');
+      return;
+    }
+    var data = {
+      puesto: puesto,
+      empresa: empresa,
+      plataforma: document.getElementById('f_plataforma').value,
+      estatus: document.getElementById('f_estatus').value,
+      fechaPostulacion: document.getElementById('f_fecha').value,
+      proximoSeguimiento: document.getElementById('f_seguimiento').value,
+      salario: document.getElementById('f_salario').value.trim(),
+      link: document.getElementById('f_link').value.trim(),
+      notas: document.getElementById('f_notas').value.trim()
+    };
+
+    if(editingId){
+      var idx = apps.findIndex(function(a){ return a.id===editingId; });
+      if(idx !== -1) apps[idx] = Object.assign(apps[idx], data);
+      showToast('Postulación actualizada');
+    } else {
+      data.id = uid();
+      apps.push(data);
+      showToast('Postulación guardada');
+    }
+
+    await saveApps();
+    closeSheet();
+    renderStats();
+    renderList();
+  }
+
+  function confirmDelete(id){
+    pendingDeleteId = id;
+    var sheet = document.getElementById('sheet');
+    sheet.innerHTML =
+      '<div class="sheet-handle"></div>' +
+      '<div class="confirm-box">' +
+        '<p>¿Eliminar esta postulación? Esta acción no se puede deshacer.</p>' +
+        '<div class="sheet-actions">' +
+          '<button class="btn btn-secondary" id="btnCancelDelete">Cancelar</button>' +
+          '<button class="btn btn-primary" id="btnConfirmDelete" style="background:var(--red-dot)">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    document.getElementById('btnCancelDelete').onclick = function(){ openForm(editingId); };
+    document.getElementById('btnConfirmDelete').onclick = doDelete;
+  }
+
+  async function doDelete(){
+    apps = apps.filter(function(a){ return a.id !== pendingDeleteId; });
+    await saveApps();
+    closeSheet();
+    renderStats();
+    renderList();
+    showToast('Postulación eliminada');
+  }
+
+  document.getElementById('fabAdd').onclick = function(){ openForm(null); };
+  document.getElementById('overlay').onclick = function(e){
+    if(e.target.id === 'overlay') closeSheet();
+  };
+  document.getElementById('searchInput').oninput = function(e){
+    searchTerm = e.target.value;
+    renderList();
+  };
+  document.getElementById('statusFilter').onchange = function(e){
+    filterStatus = e.target.value;
+    renderList();
+  };
+
+  async function init(){
+    buildStatusSelectOptions(document.getElementById('statusFilter'), true);
+    renderPills();
+    await loadApps();
+    renderStats();
+    renderList();
+  }
+
+  init();
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+  }
+
+})();
+</script>
+
+</body>
+</html>
